@@ -1,4 +1,5 @@
 CIFAR-10-P.tar
 CIFAR-10-P/
 *.zip
-
+.DS_Store
+.DS_Store?
