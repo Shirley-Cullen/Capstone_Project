@@ -88,6 +88,7 @@ for args.level in severity:
             inputs = inputs.cuda()
             inputs_ssh, labels_ssh = rotate_batch(inputs, 'rand')
             inputs_ssh, labels_ssh = inputs_ssh.cuda(), labels_ssh.cuda()
+            print(type(net(inputs_ssh)))
             _ = net(inputs_ssh)
             err_cls = test(teloader, net)[0] * 100
             err.append(err_cls)
