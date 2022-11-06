@@ -67,6 +67,7 @@ for args.level in severity:
     for args.corruption in common_corruptions:
         mom_pre = 0.1
         err = []
+        mini = float('inf')
         print(f'Corruption - {args.corruption} :::: Level - {args.level}')
         net.load_state_dict(ckpt)
         teset, teloader = prepare_test_data(args)
@@ -90,7 +91,11 @@ for args.level in severity:
             _ = net(inputs_ssh)
             err_cls = test(teloader, net)[0] * 100
             err.append(err_cls)
+            if mini>err_cls:
+                mini = err_cls
+                state = net.state_dict()
         adaptation_error = min(err)
         print(f'Error After Adaptation: {adaptation_error:.1f}')
         all_errors.append(adaptation_error)
+        torch.save(state)
     print(f'Mean Error after Adaptation {(sum(all_errors) / len(all_errors)):.1f}')
