@@ -92,19 +92,25 @@ for args.level in severity:
             inputs_ssh, labels_ssh = rotate_batch(inputs, 'rand')
             inputs_ssh, labels_ssh = inputs_ssh.cuda(), labels_ssh.cuda()
             output = net(inputs_ssh)
+            opt = output.cpu()
+            opt = opt.detach().numpy()
+            outputs.append(opt)
+            temp=np.asarray(outputs)
+            print(temp.shape)
+            # print(len(outputs))
             err_cls = test(teloader, net)[0] * 100
             err.append(err_cls)
             if mini>err_cls:
                 mini = err_cls
                 state = net.state_dict()
-                opt = output
         adaptation_error = min(err)
         print(f'Error After Adaptation: {adaptation_error:.1f}')
-        opt = opt.cpu()
-        opt = opt.detach().numpy()
-        np.save(f'{args.corruption}.npy', opt)
+        print(len(outputs))
+        outputs=np.asarray(outputs)
+        print(outputs.shape)
+        np.save(f'{args.corruption}.npy', outputs)
         all_errors.append(adaptation_error)
         torch.save(state,f'{args.corruption}.pt')
-        outputs_nparray.append(outputs)
+        # outputs_nparray.append(outputs)
     print(f'Mean Error after Adaptation {(sum(all_errors) / len(all_errors)):.1f}')
     
