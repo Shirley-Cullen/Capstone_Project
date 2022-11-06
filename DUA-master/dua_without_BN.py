@@ -81,10 +81,10 @@ for args.level in severity:
             net.eval()
             image = Image.fromarray(teset.data[i - 1])
             mom_new = (mom_pre * decay_factor)
-            for m in net.modules():
-                if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.BatchNorm3d):
-                    m.train()
-                    m.momentum = mom_new + min_momentum_constant
+            # for m in net.modules():
+            #     if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.BatchNorm3d):
+            #         m.train()
+            #         m.momentum = mom_new + min_momentum_constant
             mom_pre = mom_new
             inputs = [(tr_transform_adapt(image)) for _ in range(64)]
             inputs = torch.stack(inputs)
@@ -102,9 +102,9 @@ for args.level in severity:
         print(f'Error After Adaptation: {adaptation_error:.1f}')
         opt = opt.cpu()
         opt = opt.detach().numpy()
-        np.save(f'{args.corruption}.npy', opt)
+        np.save(f'{args.corruption}_x.npy', opt)
         all_errors.append(adaptation_error)
-        torch.save(state,f'{args.corruption}.pt')
+        torch.save(state,f'{args.corruption}_x.pt')
         outputs_nparray.append(outputs)
     print(f'Mean Error after Adaptation {(sum(all_errors) / len(all_errors)):.1f}')
     
