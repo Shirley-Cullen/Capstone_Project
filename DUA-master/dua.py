@@ -97,5 +97,5 @@ for args.level in severity:
         adaptation_error = min(err)
         print(f'Error After Adaptation: {adaptation_error:.1f}')
         all_errors.append(adaptation_error)
-        torch.save(state)
+        torch.save(state,'wrn_state.pt')
     print(f'Mean Error after Adaptation {(sum(all_errors) / len(all_errors)):.1f}')
