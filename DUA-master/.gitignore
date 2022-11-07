@@ -1,3 +1,7 @@
 ./models/__pycache__/*
 ./utils/__pycache__/*
 ./main.py
+./output_fc_pt/
+./output_fc_npy/
+
+

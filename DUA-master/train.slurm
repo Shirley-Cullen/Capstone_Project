@@ -19,5 +19,5 @@ module load cuda/10.2
 cd /scratch/mx648/Capstone/Capstone_Project_Fall_2022/DUA-master
 source activate mycapstone
 echo "start training"
-python dua.py --model wrn --dataroot Data --ckpt_path WRN.pt 
+python dua.py>myTraining.log --model wrn --dataroot Data --ckpt_path WRN.pt 
 echo "Ending"
