@@ -218,13 +218,14 @@ def train_source(args):
     args.out_file.flush()
     print(log_str+'\n')
 
-    torch.save(best_netF, osp.join(args.output_dir_src, "source_F.pt"))
-    torch.save(best_netB, osp.join(args.output_dir_src, "source_B.pt"))
-    torch.save(best_netC, osp.join(args.output_dir_src, "source_C.pt"))
-
+    torch.save(best_netF, osp.join('./PT', "source_F.pt"))
+    torch.save(best_netB, osp.join('./PT', "source_B.pt"))
+    torch.save(best_netC, osp.join('./PT', "source_C.pt"))
+    print("SAVE PT!!!")
     return netF, netB, netC
 
 def test_target(args):
+    print("\nTesting====================================================")
     dset_loaders = data_load(args)
     ## set base network
     netF = network.ResBase(res_name=args.net).cuda()
@@ -232,8 +233,9 @@ def test_target(args):
     netC = network.feat_classifier(type=args.layer, class_num = args.class_num, bottleneck_dim=args.bottleneck).cuda()
 
     args.modelpath = args.output_dir_src + '/source_F.pt'
+    # args.modelpath = './PT' + '/source_F.pt'
     netF.load_state_dict(torch.load(args.modelpath))
-    args.modelpath = args.output_dir_src + '/source_B.pt'
+    args.modelpath =args.output_dir_src + '/source_B.pt'
     netB.load_state_dict(torch.load(args.modelpath))
     args.modelpath = args.output_dir_src + '/source_C.pt'
     netC.load_state_dict(torch.load(args.modelpath))
