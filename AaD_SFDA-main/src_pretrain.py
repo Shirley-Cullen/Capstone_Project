@@ -89,11 +89,12 @@ def data_load(args):
     tr_txt = txt_src
     #te_txt = txt_src
 
-    dsets["source_tr"] = ImageList(tr_txt, transform=image_train())
+    dsets["source_tr"] = ImageList(tr_txt, transform=image_train(),types=0)
+    # print(dsets["source_tr"])
     dset_loaders["source_tr"] = DataLoader(dsets["source_tr"], batch_size=train_bs, shuffle=True, num_workers=args.worker, drop_last=False)
-    dsets["source_te"] = ImageList(te_txt, transform=image_test())
+    dsets["source_te"] = ImageList(te_txt, transform=image_test(),types=0)
     dset_loaders["source_te"] = DataLoader(dsets["source_te"], batch_size=train_bs, shuffle=True, num_workers=args.worker, drop_last=False)
-    dsets["test"] = ImageList(txt_test, transform=image_test())
+    dsets["test"] = ImageList(txt_test, transform=image_test(),types=1)
     dset_loaders["test"] = DataLoader(dsets["test"], batch_size=train_bs*2, shuffle=True, num_workers=args.worker, drop_last=False)
 
     return dset_loaders
@@ -156,6 +157,7 @@ def train_source(args):
     interval_iter = max_iter // 10
     iter_num = 0
 
+# net segment
     netF.train()
     netB.train()
     netC.train()
@@ -175,7 +177,7 @@ def train_source(args):
 
             inputs_source, labels_source = inputs_source.cuda(), labels_source.cuda()
             feature_src = netB(netF(inputs_source))
-
+#gradient loss
             outputs_source = netC(feature_src)
             classifier_loss = CrossEntropyLabelSmooth(
                 num_classes=args.class_num, epsilon=args.smooth)(
@@ -297,10 +299,12 @@ if __name__ == "__main__":
     random.seed(SEED)
     # torch.backends.cudnn.deterministic = True
 
-    folder = './data/'
-    args.s_dset_path = folder + args.dset + '/' + names[args.s] + '_list.txt'
-    args.test_dset_path = folder + args.dset + '/' + names[args.t] + '_list.txt'
-
+    folder = './Data/'
+    args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+    args.test_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+    print(args.s_dset_path)
+    print(args.test_dset_path)
+    print()
 
     args.output_dir_src = osp.join(args.output, args.da, args.dset, names[args.s][0].upper())
     args.name_src = names[args.s][0].upper()

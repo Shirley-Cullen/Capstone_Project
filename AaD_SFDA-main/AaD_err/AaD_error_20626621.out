@@ -1,0 +1,39 @@
+/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and will be removed in 0.15, please use 'weights' instead.
+  warnings.warn(
+/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=ResNet101_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet101_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Traceback (most recent call last):
+  File "src_pretrain.py", line 319, in <module>
+    train_source(args)
+  File "src_pretrain.py", line 169, in train_source
+    for batch_idx, (inputs_source,
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 681, in __next__
+    data = self._next_data()
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1376, in _next_data
+    return self._process_data(data)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1402, in _process_data
+    data.reraise()
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/_utils.py", line 461, in reraise
+    raise exception
+TypeError: Caught TypeError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/utils/data/_utils/worker.py", line 302, in _worker_loop
+    data = fetcher.fetch(index)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 49, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/gpfsnyu/scratch/mx648/Capstone/Capstone_Project_Fall_2022/AaD_SFDA-main/data_list.py", line 73, in __getitem__
+    img = self.transform(img)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/transforms/transforms.py", line 94, in __call__
+    img = t(img)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/transforms/transforms.py", line 349, in forward
+    return F.resize(img, self.size, self.interpolation, self.max_size, self.antialias)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/transforms/functional.py", line 430, in resize
+    return F_pil.resize(img, size=size, interpolation=pil_interpolation, max_size=max_size)
+  File "/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/transforms/functional_pil.py", line 249, in resize
+    raise TypeError(f"img should be PIL Image. Got {type(img)}")
+TypeError: img should be PIL Image. Got <class 'NoneType'>
+

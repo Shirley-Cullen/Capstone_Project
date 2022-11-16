@@ -23,22 +23,31 @@ def make_dataset(image_list, labels):
 
 
 def rgb_loader(path):
-    with open(path, 'rb') as f:
-        with Image.open(f) as img:
-            return img.convert('RGB')
+    try:
+        with open(path, 'rb') as f:
+            with Image.open(f) as img:
+                return img.convert('RGB')
+    except:
+        return None
+
+
 
 def l_loader(path):
-    with open(path, 'rb') as f:
-        with Image.open(f) as img:
-            return img.convert('L')
+    try:
+        with open(path, 'rb') as f:
+            with Image.open(f) as img:
+                return img.convert('L')
+    except:
+        return None
 
 class ImageList(Dataset):
-    def __init__(self, image_list, labels=None, transform=None, target_transform=None, mode='RGB'):
+    def __init__(self, image_list, labels=None, transform=None, target_transform=None, mode='RGB',types=None):
         imgs = make_dataset(image_list, labels)
         if len(imgs) == 0:
             raise(RuntimeError("Found 0 images in subfolders of: " + root + "\n"
                                "Supported image extensions are: " + ",".join(IMG_EXTENSIONS)))
 
+        
         self.imgs = imgs
         self.transform = transform
         self.target_transform = target_transform
@@ -47,8 +56,18 @@ class ImageList(Dataset):
         elif mode == 'L':
             self.loader = l_loader
 
+        self.types=types
+
     def __getitem__(self, index):
         path, target = self.imgs[index]
+        if self.types == 0:
+            image_path='./Data/visda-2017/train/'
+        elif self.types==1:
+            image_path='./Data/visda-2017/validation/'
+        elif self.types==2:
+            image_path='./Data/visda-2017/test/'
+        path = image_path+path
+        # print(path)
         img = self.loader(path)
         if self.transform is not None:
             img = self.transform(img)
