@@ -164,6 +164,7 @@ def train_source(args):
 
     smax=100
     #while iter_num < max_iter:
+    features=[]
     for epoch in range(args.max_epoch):
         iter_source = iter(dset_loaders["source_tr"])
         for batch_idx, (inputs_source,
@@ -177,6 +178,9 @@ def train_source(args):
 
             inputs_source, labels_source = inputs_source.cuda(), labels_source.cuda()
             feature_src = netB(netF(inputs_source))
+
+# BEFORE CLASSIFIER EXTRACT FEATURE?!!!
+
 #gradient loss
             outputs_source = netC(feature_src)
             classifier_loss = CrossEntropyLabelSmooth(
