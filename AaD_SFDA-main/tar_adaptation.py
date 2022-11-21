@@ -89,7 +89,7 @@ def data_load(args):
     _, te_txt = torch.utils.data.random_split(txt_src, [tr_size, dsize - tr_size])
     tr_txt = txt_src
 
-    dsets["source_tr"] = ImageList(tr_txt, transform=image_train())
+    dsets["source_tr"] = ImageList(tr_txt, transform=image_train(),types=0)
     dset_loaders["source_tr"] = DataLoader(
         dsets["source_tr"],
         batch_size=train_bs,
@@ -97,7 +97,7 @@ def data_load(args):
         num_workers=args.worker,
         drop_last=False,
     )
-    dsets["source_te"] = ImageList(te_txt, transform=image_test())
+    dsets["source_te"] = ImageList(te_txt, transform=image_test(),types=0)
     dset_loaders["source_te"] = DataLoader(
         dsets["source_te"],
         batch_size=train_bs,
@@ -105,7 +105,7 @@ def data_load(args):
         num_workers=args.worker,
         drop_last=False,
     )
-    dsets["target"] = ImageList_idx(txt_tar, transform=image_train())
+    dsets["target"] = ImageList_idx(txt_tar, transform=image_train(),types=1)
     dset_loaders["target"] = DataLoader(
         dsets["target"],
         batch_size=train_bs,
@@ -113,7 +113,7 @@ def data_load(args):
         num_workers=args.worker,
         drop_last=False,
     )
-    dsets["test"] = ImageList_idx(txt_test, transform=image_test())
+    dsets["test"] = ImageList_idx(txt_test, transform=image_test(),types=2)
     dset_loaders["test"] = DataLoader(
         dsets["test"],
         batch_size=train_bs * 3,
@@ -461,13 +461,13 @@ if __name__ == "__main__":
             continue
         args.t = i
 
-        folder = "./data/"
-        args.s_dset_path = folder + args.dset + "/" + names[args.s] + "_list.txt"
-        args.t_dset_path = folder + args.dset + "/" + names[args.t] + "_list.txt"
-        args.test_dset_path = folder + args.dset + "/" + names[args.t] + "_list.txt"
+        folder = "./Data/"
+        args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+        args.test_dset_path = folder + args.dset + "/test/" + "image_list.txt"
 
         args.output_dir_src = osp.join(
-            args.output_src, args.da, args.dset, names[args.s][0].upper()
+            args.output_src, args.da, args.dset, "A"
         )
         args.output_dir = osp.join(
             args.output,
