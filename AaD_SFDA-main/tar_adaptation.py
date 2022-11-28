@@ -130,7 +130,7 @@ def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
     num_sample = len(loader.dataset)
     label_bank = torch.randn(num_sample)  # .cuda()
     pred_bank = torch.randn(num_sample)
-    # nu=[]
+    nu=[]
     # s=[]
     # var_all=[]
 
@@ -180,12 +180,12 @@ def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
 
     """acc1 = (score_near.mean(
         dim=-1) == score_near[:, 0]).sum().float() / score_near.shape[0]"""
-    acc1 = (
-        (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
-    ).sum().float() / score_near.shape[0]
-    acc2 = (
-        (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
-    ).sum().float() / score_near.shape[0]
+    # acc1 = (
+    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
+    # ).sum().float() / score_near.shape[0]
+    # acc2 = (
+    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
+    # ).sum().float() / score_near.shape[0]
 
     """if True:
         nu_mean=sum(nu)/len(nu)"""
@@ -464,10 +464,10 @@ if __name__ == "__main__":
         folder = "./Data/"
         args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
         args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
-        args.test_dset_path = folder + args.dset + "/test/" + "image_list.txt"
+        args.test_dset_path = folder + "image_list.txt"
 
         args.output_dir_src = osp.join(
-            args.output_src, args.da, args.dset, "A"
+            args.output_src, args.da, args.dset, "T"
         )
         args.output_dir = osp.join(
             args.output,

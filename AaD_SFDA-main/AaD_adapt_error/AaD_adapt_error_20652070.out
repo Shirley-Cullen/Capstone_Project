@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "tar_adaptation.py", line 490, in <module>
+    train_target(args)
+  File "tar_adaptation.py", line 215, in train_target
+    dset_loaders = data_load(args)
+  File "tar_adaptation.py", line 116, in data_load
+    dsets["test"] = ImageList_idx(txt_test, transform=image_test(),types=2)
+  File "/gpfsnyu/scratch/mx648/Capstone/Capstone_Project_Fall_2022/AaD_SFDA-main/data_list.py", line 85, in __init__
+    imgs = make_dataset(image_list, labels)
+  File "/gpfsnyu/scratch/mx648/Capstone/Capstone_Project_Fall_2022/AaD_SFDA-main/data_list.py", line 21, in make_dataset
+    images = [(val.split()[0], int(val.split()[1])) for val in image_list]
+  File "/gpfsnyu/scratch/mx648/Capstone/Capstone_Project_Fall_2022/AaD_SFDA-main/data_list.py", line 21, in <listcomp>
+    images = [(val.split()[0], int(val.split()[1])) for val in image_list]
+IndexError: list index out of range

@@ -15,10 +15,14 @@ def make_dataset(image_list, labels):
       len_ = len(image_list)
       images = [(image_list[i].strip(), labels[i, :]) for i in range(len_)]
     else:
-      if len(image_list[0].split()) > 2:
-        images = [(val.split()[0], np.array([int(la) for la in val.split()[1:]])) for val in image_list]
-      else:
-        images = [(val.split()[0], int(val.split()[1])) for val in image_list]
+        if len(image_list[0].split()) > 2:
+            images = [(val.split()[0], np.array([int(la) for la in val.split()[1:]])) for val in image_list]
+        else:
+        # images = [val.split()[0] for val in image_list]
+            images = [(val.split()[0], int(val.split()[1])) for val in image_list]
+        # else:
+        #     images = [val.split()[0] for val in image_list]
+
     return images
 
 
@@ -94,6 +98,7 @@ class ImageList_idx(Dataset):
             self.loader = rgb_loader
         elif mode == 'L':
             self.loader = l_loader
+        self.types=types
 
     def __getitem__(self, index):
         path, target = self.imgs[index]
