@@ -13,7 +13,12 @@ from data_list import ImageList, ImageList_idx
 import random, pdb, math, copy
 from sklearn.metrics import confusion_matrix
 import torch.nn.functional as F
+from tqdm import tqdm
+from PIL import Image
+import torchvision.transforms as transforms
+from rotation import *
 
+NORM = ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
 def Entropy(input_):
     bs = input_.size(0)
@@ -89,7 +94,7 @@ def data_load(args):
     _, te_txt = torch.utils.data.random_split(txt_src, [tr_size, dsize - tr_size])
     tr_txt = txt_src
 
-    dsets["source_tr"] = ImageList(tr_txt, transform=image_train(),types=0)
+    dsets["source_tr"] = ImageList(tr_txt, transform=image_train(), types=0)
     dset_loaders["source_tr"] = DataLoader(
         dsets["source_tr"],
         batch_size=train_bs,
@@ -97,7 +102,7 @@ def data_load(args):
         num_workers=args.worker,
         drop_last=False,
     )
-    dsets["source_te"] = ImageList(te_txt, transform=image_test(),types=0)
+    dsets["source_te"] = ImageList(te_txt, transform=image_test(), types=0)
     dset_loaders["source_te"] = DataLoader(
         dsets["source_te"],
         batch_size=train_bs,
@@ -105,7 +110,7 @@ def data_load(args):
         num_workers=args.worker,
         drop_last=False,
     )
-    dsets["target"] = ImageList_idx(txt_tar, transform=image_train(),types=1)
+    dsets["target"] = ImageList_idx(txt_tar, transform=image_train(), types=1)
     dset_loaders["target"] = DataLoader(
         dsets["target"],
         batch_size=train_bs,
@@ -113,7 +118,7 @@ def data_load(args):
         num_workers=args.worker,
         drop_last=False,
     )
-    dsets["test"] = ImageList_idx(txt_test, transform=image_test(),types=2)
+    dsets["test"] = ImageList_idx(txt_test, transform=image_test(), types=1)
     dset_loaders["test"] = DataLoader(
         dsets["test"],
         batch_size=train_bs * 3,
@@ -124,13 +129,45 @@ def data_load(args):
 
     return dset_loaders
 
+def cal_acc(loader, netF, netB, netC, flag=False):
+    start_test = True
+    with torch.no_grad():
+        iter_test = iter(loader)
+        for i in range(len(loader)):
+            data = iter_test.next()
+            inputs = data[0]
+            labels = data[1]
+            inputs = inputs.cuda()
+            outputs = netC(netB(netF(inputs)))
+            if start_test:
+                all_output = outputs.float().cpu()
+                all_label = labels.float()
+                start_test = False
+            else:
+                all_output = torch.cat((all_output, outputs.float().cpu()), 0)
+                all_label = torch.cat((all_label, labels.float()), 0)
 
+    all_output = nn.Softmax(dim=1)(all_output)
+    _, predict = torch.max(all_output, 1)
+    accuracy = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(all_label.size()[0])
+    mean_ent = torch.mean(Entropy(all_output)).cpu().data.item()
+
+    if flag:
+        matrix = confusion_matrix(all_label, torch.squeeze(predict).float())
+        acc = matrix.diagonal()/matrix.sum(axis=1) * 100
+        aacc = acc.mean()
+        aa = [str(np.round(i, 2)) for i in acc]
+        acc = ' '.join(aa)
+        return aacc, acc
+    else:
+        return accuracy*100, mean_ent
+'''
 def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
     start_test = True
     num_sample = len(loader.dataset)
     label_bank = torch.randn(num_sample)  # .cuda()
     pred_bank = torch.randn(num_sample)
-    nu=[]
+    # nu=[]
     # s=[]
     # var_all=[]
 
@@ -154,7 +191,7 @@ def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
 
             outputs = netC(fea)
             softmax_out = nn.Softmax()(outputs)
-            nu.append(torch.mean(torch.svd(softmax_out)[1]))
+            # nu.append(torch.mean(torch.svd(softmax_out)[1]))
             output_f_norm = F.normalize(fea)
             # fea_bank[indx] = output_f_norm.detach().clone().cpu()
             label_bank[indx] = labels.float().detach().clone()  # .cpu()
@@ -180,12 +217,12 @@ def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
 
     """acc1 = (score_near.mean(
         dim=-1) == score_near[:, 0]).sum().float() / score_near.shape[0]"""
-    # acc1 = (
-    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
-    # ).sum().float() / score_near.shape[0]
-    # acc2 = (
-    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
-    # ).sum().float() / score_near.shape[0]
+    acc1 = (
+        (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
+    ).sum().float() / score_near.shape[0]
+    acc2 = (
+        (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
+    ).sum().float() / score_near.shape[0]
 
     """if True:
         nu_mean=sum(nu)/len(nu)"""
@@ -204,14 +241,14 @@ def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
 
     else:
         return accuracy * 100, mean_ent
-
+'''
 
 def hyper_decay(x, beta=-2, alpha=1):
     weight = (1 + 10 * x) ** (-beta) * alpha
     return weight
 
 
-def train_target(args):
+def train_target(args, get_embed = False):
     dset_loaders = data_load(args)
     ## set base network
     netF = network.ResBase(res_name=args.net).cuda()
@@ -226,15 +263,12 @@ def train_target(args):
     ).cuda()
 
     modelpath = args.output_dir_src + "/source_F.pt"
-    # modelpath = 'PT/BN/target_F_BN2_2021_LPA.pt'
     netF.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_B_BN2_2021_LPA.pt'
     modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_C_BN2_2021_LPA.pt'
     modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
-
+    '''
     param_group = []
     param_group_c = []
     for k, v in netF.named_parameters():
@@ -247,22 +281,27 @@ def train_target(args):
             param_group += [{"params": v, "lr": args.lr * 1}]  # 1
     for k, v in netC.named_parameters():
         param_group_c += [{"params": v, "lr": args.lr * 1}]  # 1
-
+    
     optimizer = optim.SGD(param_group)
     optimizer = op_copy(optimizer)
 
     optimizer_c = optim.SGD(param_group_c)
     optimizer_c = op_copy(optimizer_c)
-
+    '''
     # building feature bank and score bank
     loader = dset_loaders["target"]
+    '''
     num_sample = len(loader.dataset)
     fea_bank = torch.randn(num_sample, 256)
     score_bank = torch.randn(num_sample, 12).cuda()
+    '''
 
     netF.eval()
     netB.eval()
     netC.eval()
+
+    '''
+    # create feature and score banks
     with torch.no_grad():
         iter_test = iter(loader)
         for i in range(len(loader)):
@@ -278,35 +317,69 @@ def train_target(args):
 
             fea_bank[indx] = output_norm.detach().clone().cpu()
             score_bank[indx] = outputs.detach().clone()  # .cpu()
+    '''
+    # tr_transform_adapt = transforms.Compose([
+    # transforms.RandomCrop(32, padding=4),
+    # transforms.RandomHorizontalFlip(),
+    # transforms.ToTensor(),
+    # transforms.Normalize(*NORM)
+    # ])
 
-    max_iter = args.max_epoch * len(dset_loaders["target"])
-    interval_iter = max_iter // args.interval
+    # max_iter = args.max_epoch * len(dset_loaders["target"])
+    # interval_iter = max_iter // args.interval
     iter_num = 0
+    interval_iter = 8
 
-    netF.train()
-    netB.train()
-    netC.train()
+    # netF.train()
+    # netB.train()
+    # netC.train()
     acc_log = 0
 
-    real_max_iter = max_iter
+    # real_max_iter = max_iter
+    real_max_iter = 128
+    decay_factor = 0.94
+    min_momentum_constant = 0.005
+    mom_pre = 0.1
 
     while iter_num < real_max_iter:
+        # if inputs_test.size(0) == 1:
+        #     continue
+
+        # if True:
+        #     alpha = (1 + 10 * iter_num / max_iter) ** (-args.beta) * args.alpha
+        # else:
+        #     alpha = args.alpha
+
+        iter_num += 1
         try:
             inputs_test, _, tar_idx = iter_test.next()
         except:
             iter_test = iter(dset_loaders["target"])
             inputs_test, _, tar_idx = iter_test.next()
-
-        if inputs_test.size(0) == 1:
-            continue
-
-        inputs_test = inputs_test.cuda()
-        if True:
-            alpha = (1 + 10 * iter_num / max_iter) ** (-args.beta) * args.alpha
-        else:
-            alpha = args.alpha
-
-        iter_num += 1
+        # inputs_test = inputs_test.cuda()
+        # x = inputs_test[iter_num - 1].numpy()
+        # image = Image.fromarray((x * 255).astype(np.uint8))
+        mom_new = (mom_pre * decay_factor)
+        print('Batch Norm Adjustment momentum:', mom_new)
+        for m in netF.modules():
+            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.BatchNorm3d):
+                m.train()
+                m.momentum = mom_new + min_momentum_constant
+        for m in netB.modules():
+            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.BatchNorm3d):
+                m.train()
+                m.momentum = mom_new + min_momentum_constant
+        mom_pre = mom_new
+        # inputs = [(tr_transform_adapt(image)) for _ in range(64)]
+        # inputs = torch.stack(inputs)
+        inputs = inputs_test.cuda()
+        # inputs_ssh, labels_ssh = rotate_batch(inputs, 'rand')
+        # inputs_ssh, labels_ssh = inputs_ssh.cuda(), labels_ssh.cuda()
+        _ = netB(netF(inputs))
+        # _ = net(inputs_ssh)
+        # err_cls = test(teloader, net)[0] * 100
+        # err.append(err_cls)
+        '''
         lr_scheduler(optimizer, iter_num=iter_num, max_iter=max_iter)
         lr_scheduler(optimizer_c, iter_num=iter_num, max_iter=max_iter)
 
@@ -355,50 +428,36 @@ def train_target(args):
         loss.backward()
         optimizer.step()
         optimizer_c.step()
+        '''
 
-        if iter_num % interval_iter == 0 or iter_num == max_iter:
+        if iter_num % interval_iter == 0 or iter_num == real_max_iter:
             netF.eval()
             netB.eval()
             netC.eval()
             if args.dset == "visda-2017":
-                acc, accc = cal_acc(
-                    dset_loaders["test"],
-                    fea_bank,
-                    score_bank,
-                    netF,
-                    netB,
-                    netC,
-                    args,
-                    flag=True,
-                )
-                log_str = (
-                    "Task: {}, Iter:{}/{};  Acc on target: {:.2f}".format(
-                        args.name, iter_num, max_iter, acc
-                    )
-                    + "\n"
-                    + "T: "
-                    + accc
-                )
+                acc, acc_list = cal_acc(dset_loaders["test"], netF, netB, netC, flag=True)
+                log_str = '\nTask: {}, Iter:{}/{}; Acc on target: {:.2f}%'.format(args.name, iter_num, real_max_iter, acc) + '\n' + acc_list
+            
 
-            args.out_file.write(log_str + "\n")
+            args.out_file.write(log_str)
             args.out_file.flush()
-            print(log_str + "\n")
-            netF.train()
-            netB.train()
-            netC.train()
-            # if acc>acc_log:
-            #     acc_log = acc
-            #     torch.save(
-            #         netF.state_dict(),
-            #         osp.join(args.output_dir, "target_F_test_" + '2021_'+str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netB.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_B_test_" + '2021_' + str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netC.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_C_test_" + '2021_' + str(args.tag) + ".pt"))
+            print(log_str)
+            # netF.train()
+            # netB.train()
+            # netC.train()
+            if acc>acc_log:
+                acc_log = acc
+                torch.save(
+                    netF.state_dict(),
+                    osp.join(args.output_dir, "target_F_BN_" + '2021_'+str(args.tag) + ".pt"))
+                torch.save(
+                    netB.state_dict(),
+                    osp.join(args.output_dir,
+                                "target_B_BN_" + '2021_' + str(args.tag) + ".pt"))
+                torch.save(
+                    netC.state_dict(),
+                    osp.join(args.output_dir,
+                                "target_C_BN_" + '2021_' + str(args.tag) + ".pt"))
 
     return netF, netB, netC
 
@@ -419,7 +478,7 @@ if __name__ == "__main__":
     parser.add_argument("--t", type=int, default=1, help="target")
     parser.add_argument("--max_epoch", type=int, default=15, help="max iterations")
     parser.add_argument("--interval", type=int, default=150)
-    parser.add_argument("--batch_size", type=int, default=64, help="batch_size")
+    parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument("--worker", type=int, default=4, help="number of workers")
     parser.add_argument("--dset", type=str, default="visda-2017")
     parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
@@ -465,16 +524,15 @@ if __name__ == "__main__":
         args.t = i
 
         folder = "./Data/"
-        args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
-        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
-        args.test_dset_path = folder + "image_new_list.txt"
+        args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+        args.test_dset_path = folder + "image_list.txt"
 
         args.output_dir_src = osp.join(
-            args.output_src, args.da, args.dset, "T"
+            args.output_src, args.da, args.dset, names[args.s][0].upper()
         )
         args.output_dir = osp.join(
             args.output,
-            args.da,
             args.dset,
             names[args.s][0].upper() + names[args.t][0].upper(),
         )
@@ -486,8 +544,8 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_batch_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()
-        train_target(args)
+        train_target(args, get_embed = False)

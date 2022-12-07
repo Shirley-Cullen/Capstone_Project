@@ -465,9 +465,9 @@ if __name__ == "__main__":
         args.t = i
 
         folder = "./Data/"
-        args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
-        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
-        args.test_dset_path = folder + "image_new_list.txt"
+        args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+        args.test_dset_path = folder + "image_list.txt"
 
         args.output_dir_src = osp.join(
             args.output_src, args.da, args.dset, "T"
@@ -486,7 +486,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_ALL_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()

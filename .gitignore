@@ -11,3 +11,4 @@ output_fc_npy/*
 *.png
 __pycache__/*
 *.pt
+*.out

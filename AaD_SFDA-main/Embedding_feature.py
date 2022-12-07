@@ -225,14 +225,14 @@ def train_target(args):
         type=args.layer, class_num=args.class_num, bottleneck_dim=args.bottleneck
     ).cuda()
 
-    modelpath = args.output_dir_src + "/source_F.pt"
-    # modelpath = 'PT/BN/target_F_BN2_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_F.pt"
+    modelpath = './PT/BN/target_F_BN2_2021_LPA.pt'
     netF.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_B_BN2_2021_LPA.pt'
-    modelpath = args.output_dir_src + "/source_B.pt"
+    modelpath = './PT/BN/target_B_BN2_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_C_BN2_2021_LPA.pt'
-    modelpath = args.output_dir_src + "/source_C.pt"
+    modelpath = './PT/BN/target_C_BN2_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
 
     param_group = []
@@ -265,140 +265,146 @@ def train_target(args):
     netC.eval()
     with torch.no_grad():
         iter_test = iter(loader)
+        embed_list, labels_list, output_list = [], [], []
         for i in range(len(loader)):
             data = iter_test.next()
             inputs = data[0]
             indx = data[-1]
-            # labels = data[1]
+            labels = data[1]
             inputs = inputs.cuda()
+
             output = netB(netF(inputs))
+            embeb = output.detach().cpu()
             output_norm = F.normalize(output)
             outputs = netC(output)
             outputs = nn.Softmax(-1)(outputs)
+            outputs = outputs.
+
+            embed_list.append()
 
             fea_bank[indx] = output_norm.detach().clone().cpu()
             score_bank[indx] = outputs.detach().clone()  # .cpu()
 
-    max_iter = args.max_epoch * len(dset_loaders["target"])
-    interval_iter = max_iter // args.interval
-    iter_num = 0
+    # max_iter = args.max_epoch * len(dset_loaders["target"])
+    # interval_iter = max_iter // args.interval
+    # iter_num = 0
 
-    netF.train()
-    netB.train()
-    netC.train()
-    acc_log = 0
+    # netF.train()
+    # netB.train()
+    # netC.train()
+    # acc_log = 0
 
-    real_max_iter = max_iter
+    # real_max_iter = max_iter
 
-    while iter_num < real_max_iter:
-        try:
-            inputs_test, _, tar_idx = iter_test.next()
-        except:
-            iter_test = iter(dset_loaders["target"])
-            inputs_test, _, tar_idx = iter_test.next()
+    # while iter_num < real_max_iter:
+    #     try:
+    #         inputs_test, _, tar_idx = iter_test.next()
+    #     except:
+    #         iter_test = iter(dset_loaders["target"])
+    #         inputs_test, _, tar_idx = iter_test.next()
 
-        if inputs_test.size(0) == 1:
-            continue
+    #     if inputs_test.size(0) == 1:
+    #         continue
 
-        inputs_test = inputs_test.cuda()
-        if True:
-            alpha = (1 + 10 * iter_num / max_iter) ** (-args.beta) * args.alpha
-        else:
-            alpha = args.alpha
+    #     inputs_test = inputs_test.cuda()
+    #     if True:
+    #         alpha = (1 + 10 * iter_num / max_iter) ** (-args.beta) * args.alpha
+    #     else:
+    #         alpha = args.alpha
 
-        iter_num += 1
-        lr_scheduler(optimizer, iter_num=iter_num, max_iter=max_iter)
-        lr_scheduler(optimizer_c, iter_num=iter_num, max_iter=max_iter)
+    #     iter_num += 1
+    #     lr_scheduler(optimizer, iter_num=iter_num, max_iter=max_iter)
+    #     lr_scheduler(optimizer_c, iter_num=iter_num, max_iter=max_iter)
 
-        features_test = netB(netF(inputs_test))
-        outputs_test = netC(features_test)
-        softmax_out = nn.Softmax(dim=1)(outputs_test)
-        # output_re = softmax_out.unsqueeze(1)
+    #     features_test = netB(netF(inputs_test))
+    #     outputs_test = netC(features_test)
+    #     softmax_out = nn.Softmax(dim=1)(outputs_test)
+    #     # output_re = softmax_out.unsqueeze(1)
 
-        with torch.no_grad():
-            output_f_norm = F.normalize(features_test)
-            output_f_ = output_f_norm.cpu().detach().clone()
+    #     with torch.no_grad():
+    #         output_f_norm = F.normalize(features_test)
+    #         output_f_ = output_f_norm.cpu().detach().clone()
 
-            pred_bs = softmax_out
+    #         pred_bs = softmax_out
 
-            fea_bank[tar_idx] = output_f_.detach().clone().cpu()
-            score_bank[tar_idx] = softmax_out.detach().clone()
+    #         fea_bank[tar_idx] = output_f_.detach().clone().cpu()
+    #         score_bank[tar_idx] = softmax_out.detach().clone()
 
-            distance = output_f_ @ fea_bank.T
-            _, idx_near = torch.topk(distance, dim=-1, largest=True, k=args.K + 1)
-            idx_near = idx_near[:, 1:]  # batch x K
-            score_near = score_bank[idx_near]  # batch x K x C
+    #         distance = output_f_ @ fea_bank.T
+    #         _, idx_near = torch.topk(distance, dim=-1, largest=True, k=args.K + 1)
+    #         idx_near = idx_near[:, 1:]  # batch x K
+    #         score_near = score_bank[idx_near]  # batch x K x C
 
-        # nn
-        softmax_out_un = softmax_out.unsqueeze(1).expand(
-            -1, args.K, -1
-        )  # batch x K x C
+    #     # nn
+    #     softmax_out_un = softmax_out.unsqueeze(1).expand(
+    #         -1, args.K, -1
+    #     )  # batch x K x C
 
-        loss = torch.mean(
-            (F.kl_div(softmax_out_un, score_near, reduction="none").sum(-1)).sum(1)
-        ) # Equal to dot product
+    #     loss = torch.mean(
+    #         (F.kl_div(softmax_out_un, score_near, reduction="none").sum(-1)).sum(1)
+    #     ) # Equal to dot product
 
-        mask = torch.ones((inputs_test.shape[0], inputs_test.shape[0]))
-        diag_num = torch.diag(mask)
-        mask_diag = torch.diag_embed(diag_num)
-        mask = mask - mask_diag
-        copy = softmax_out.T  # .detach().clone()#
+    #     mask = torch.ones((inputs_test.shape[0], inputs_test.shape[0]))
+    #     diag_num = torch.diag(mask)
+    #     mask_diag = torch.diag_embed(diag_num)
+    #     mask = mask - mask_diag
+    #     copy = softmax_out.T  # .detach().clone()#
 
-        dot_neg = softmax_out @ copy  # batch x batch
+    #     dot_neg = softmax_out @ copy  # batch x batch
 
-        dot_neg = (dot_neg * mask.cuda()).sum(-1)  # batch
-        neg_pred = torch.mean(dot_neg)
-        loss += neg_pred * alpha
+    #     dot_neg = (dot_neg * mask.cuda()).sum(-1)  # batch
+    #     neg_pred = torch.mean(dot_neg)
+    #     loss += neg_pred * alpha
 
-        optimizer.zero_grad()
-        optimizer_c.zero_grad()
-        loss.backward()
-        optimizer.step()
-        optimizer_c.step()
+    #     optimizer.zero_grad()
+    #     optimizer_c.zero_grad()
+    #     loss.backward()
+    #     optimizer.step()
+    #     optimizer_c.step()
 
-        if iter_num % interval_iter == 0 or iter_num == max_iter:
-            netF.eval()
-            netB.eval()
-            netC.eval()
-            if args.dset == "visda-2017":
-                acc, accc = cal_acc(
-                    dset_loaders["test"],
-                    fea_bank,
-                    score_bank,
-                    netF,
-                    netB,
-                    netC,
-                    args,
-                    flag=True,
-                )
-                log_str = (
-                    "Task: {}, Iter:{}/{};  Acc on target: {:.2f}".format(
-                        args.name, iter_num, max_iter, acc
-                    )
-                    + "\n"
-                    + "T: "
-                    + accc
-                )
+    #     if iter_num % interval_iter == 0 or iter_num == max_iter:
+    #         netF.eval()
+    #         netB.eval()
+    #         netC.eval()
+    #         if args.dset == "visda-2017":
+    #             acc, accc = cal_acc(
+    #                 dset_loaders["test"],
+    #                 fea_bank,
+    #                 score_bank,
+    #                 netF,
+    #                 netB,
+    #                 netC,
+    #                 args,
+    #                 flag=True,
+    #             )
+    #             log_str = (
+    #                 "Task: {}, Iter:{}/{};  Acc on target: {:.2f}".format(
+    #                     args.name, iter_num, max_iter, acc
+    #                 )
+    #                 + "\n"
+    #                 + "T: "
+    #                 + accc
+    #             )
 
-            args.out_file.write(log_str + "\n")
-            args.out_file.flush()
-            print(log_str + "\n")
-            netF.train()
-            netB.train()
-            netC.train()
-            # if acc>acc_log:
-            #     acc_log = acc
-            #     torch.save(
-            #         netF.state_dict(),
-            #         osp.join(args.output_dir, "target_F_test_" + '2021_'+str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netB.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_B_test_" + '2021_' + str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netC.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_C_test_" + '2021_' + str(args.tag) + ".pt"))
+    #         args.out_file.write(log_str + "\n")
+    #         args.out_file.flush()
+    #         print(log_str + "\n")
+    #         netF.train()
+    #         netB.train()
+    #         netC.train()
+    #         if acc>acc_log:
+    #             acc_log = acc
+    #             torch.save(
+    #                 netF.state_dict(),
+    #                 osp.join(args.output_dir, "target_F_test_" + '2021_'+str(args.tag) + ".pt"))
+    #             torch.save(
+    #                 netB.state_dict(),
+    #                 osp.join(args.output_dir,
+    #                             "target_B_test_" + '2021_' + str(args.tag) + ".pt"))
+    #             torch.save(
+    #                 netC.state_dict(),
+    #                 osp.join(args.output_dir,
+    #                             "target_C_test_" + '2021_' + str(args.tag) + ".pt"))
 
     return netF, netB, netC
 

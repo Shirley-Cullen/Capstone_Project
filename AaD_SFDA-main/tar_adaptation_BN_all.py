@@ -225,14 +225,14 @@ def train_target(args):
         type=args.layer, class_num=args.class_num, bottleneck_dim=args.bottleneck
     ).cuda()
 
-    modelpath = args.output_dir_src + "/source_F.pt"
-    # modelpath = 'PT/BN/target_F_BN2_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_F.pt"
+    modelpath = './weight/target/uda/visda-2017/TV/target_F_BN_2021_LPA.pt'
     netF.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_B_BN2_2021_LPA.pt'
-    modelpath = args.output_dir_src + "/source_B.pt"
+    modelpath = './weight/target/uda/visda-2017/TV/target_B_BN_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_C_BN2_2021_LPA.pt'
-    modelpath = args.output_dir_src + "/source_C.pt"
+    modelpath = './weight/target/uda/visda-2017/TV/target_C_BN_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
 
     param_group = []
@@ -465,9 +465,9 @@ if __name__ == "__main__":
         args.t = i
 
         folder = "./Data/"
-        args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
-        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
-        args.test_dset_path = folder + "image_new_list.txt"
+        args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+        args.test_dset_path = folder + "image_list.txt"
 
         args.output_dir_src = osp.join(
             args.output_src, args.da, args.dset, "T"
@@ -486,7 +486,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_ALL_BN_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()

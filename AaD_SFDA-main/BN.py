@@ -124,86 +124,118 @@ def data_load(args):
 
     return dset_loaders
 
-
-def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
+def cal_acc(loader, netF, netB, netC, flag=False):
     start_test = True
-    num_sample = len(loader.dataset)
-    label_bank = torch.randn(num_sample)  # .cuda()
-    pred_bank = torch.randn(num_sample)
-    nu=[]
-    # s=[]
-    # var_all=[]
-
     with torch.no_grad():
         iter_test = iter(loader)
         for i in range(len(loader)):
             data = iter_test.next()
             inputs = data[0]
             labels = data[1]
-            indx = data[-1]
             inputs = inputs.cuda()
-            fea = netB(netF(inputs))
-            """if args.var:
-                var_batch=fea.var()
-                var_all.append(var_batch)"""
-
-            # if args.singular:
-            # _, ss, _ = torch.svd(fea)
-            # s10=ss[:10]/ss[0]
-            # s.append(s10)
-
-            outputs = netC(fea)
-            softmax_out = nn.Softmax()(outputs)
-            nu.append(torch.mean(torch.svd(softmax_out)[1]))
-            output_f_norm = F.normalize(fea)
-            # fea_bank[indx] = output_f_norm.detach().clone().cpu()
-            label_bank[indx] = labels.float().detach().clone()  # .cpu()
-            pred_bank[indx] = outputs.max(-1)[1].float().detach().clone().cpu()
+            outputs = netC(netB(netF(inputs)))
             if start_test:
                 all_output = outputs.float().cpu()
                 all_label = labels.float()
-                # all_fea = output_f_norm.cpu()
                 start_test = False
             else:
                 all_output = torch.cat((all_output, outputs.float().cpu()), 0)
                 all_label = torch.cat((all_label, labels.float()), 0)
-                # all_fea = torch.cat((all_fea, output_f_norm.cpu()), 0)
+
+    all_output = nn.Softmax(dim=1)(all_output)
     _, predict = torch.max(all_output, 1)
-    accuracy = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(
-        all_label.size()[0]
-    )
+    accuracy = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(all_label.size()[0])
+    mean_ent = torch.mean(Entropy(all_output)).cpu().data.item()
 
-    _, socre_bank_ = torch.max(socre_bank, 1)
-    distance = fea_bank.cpu() @ fea_bank.cpu().T
-    _, idx_near = torch.topk(distance, dim=-1, largest=True, k=4)
-    score_near = socre_bank_[idx_near[:, :]].float().cpu()  # N x 4
-
-    """acc1 = (score_near.mean(
-        dim=-1) == score_near[:, 0]).sum().float() / score_near.shape[0]"""
-    # acc1 = (
-    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
-    # ).sum().float() / score_near.shape[0]
-    # acc2 = (
-    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
-    # ).sum().float() / score_near.shape[0]
-
-    """if True:
-        nu_mean=sum(nu)/len(nu)"""
-
-    # s10_avg=torch.stack(s).mean(0)
-    # print('nuclear mean: {:.2f}'.format(nu_mean))
-
-    if True:
+    if flag:
         matrix = confusion_matrix(all_label, torch.squeeze(predict).float())
-        acc = matrix.diagonal() / matrix.sum(axis=1) * 100
+        acc = matrix.diagonal()/matrix.sum(axis=1) * 100
         aacc = acc.mean()
         aa = [str(np.round(i, 2)) for i in acc]
-        acc = " ".join(aa)
-        if True:
-            return aacc, acc  # , acc1, acc2#, nu_mean, s10_avg
-
+        acc = ' '.join(aa)
+        return aacc, acc
     else:
-        return accuracy * 100, mean_ent
+        return accuracy*100, mean_ent
+
+# def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
+#     start_test = True
+#     num_sample = len(loader.dataset)
+#     label_bank = torch.randn(num_sample)  # .cuda()
+#     pred_bank = torch.randn(num_sample)
+#     nu=[]
+#     # s=[]
+#     # var_all=[]
+
+#     with torch.no_grad():
+#         iter_test = iter(loader)
+#         for i in range(len(loader)):
+#             data = iter_test.next()
+#             inputs = data[0]
+#             labels = data[1]
+#             indx = data[-1]
+#             inputs = inputs.cuda()
+#             fea = netB(netF(inputs))
+#             """if args.var:
+#                 var_batch=fea.var()
+#                 var_all.append(var_batch)"""
+
+#             # if args.singular:
+#             # _, ss, _ = torch.svd(fea)
+#             # s10=ss[:10]/ss[0]
+#             # s.append(s10)
+
+#             outputs = netC(fea)
+#             softmax_out = nn.Softmax()(outputs)
+#             nu.append(torch.mean(torch.svd(softmax_out)[1]))
+#             output_f_norm = F.normalize(fea)
+#             # fea_bank[indx] = output_f_norm.detach().clone().cpu()
+#             label_bank[indx] = labels.float().detach().clone()  # .cpu()
+#             pred_bank[indx] = outputs.max(-1)[1].float().detach().clone().cpu()
+#             if start_test:
+#                 all_output = outputs.float().cpu()
+#                 all_label = labels.float()
+#                 # all_fea = output_f_norm.cpu()
+#                 start_test = False
+#             else:
+#                 all_output = torch.cat((all_output, outputs.float().cpu()), 0)
+#                 all_label = torch.cat((all_label, labels.float()), 0)
+#                 # all_fea = torch.cat((all_fea, output_f_norm.cpu()), 0)
+#     _, predict = torch.max(all_output, 1)
+#     accuracy = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(
+#         all_label.size()[0]
+#     )
+
+#     _, socre_bank_ = torch.max(socre_bank, 1)
+#     distance = fea_bank.cpu() @ fea_bank.cpu().T
+#     _, idx_near = torch.topk(distance, dim=-1, largest=True, k=4)
+#     score_near = socre_bank_[idx_near[:, :]].float().cpu()  # N x 4
+
+#     """acc1 = (score_near.mean(
+#         dim=-1) == score_near[:, 0]).sum().float() / score_near.shape[0]"""
+#     # acc1 = (
+#     #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
+#     # ).sum().float() / score_near.shape[0]
+#     # acc2 = (
+#     #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
+#     # ).sum().float() / score_near.shape[0]
+
+#     """if True:
+#         nu_mean=sum(nu)/len(nu)"""
+
+#     # s10_avg=torch.stack(s).mean(0)
+#     # print('nuclear mean: {:.2f}'.format(nu_mean))
+
+#     if True:
+#         matrix = confusion_matrix(all_label, torch.squeeze(predict).float())
+#         acc = matrix.diagonal() / matrix.sum(axis=1) * 100
+#         aacc = acc.mean()
+#         aa = [str(np.round(i, 2)) for i in acc]
+#         acc = " ".join(aa)
+#         if True:
+#             return aacc, acc  # , acc1, acc2#, nu_mean, s10_avg
+
+#     else:
+#         return accuracy * 100, mean_ent
 
 
 def hyper_decay(x, beta=-2, alpha=1):
@@ -226,69 +258,72 @@ def train_target(args):
     ).cuda()
 
     modelpath = args.output_dir_src + "/source_F.pt"
-    # modelpath = 'PT/BN/target_F_BN2_2021_LPA.pt'
+    # modelpath = './PT/BN/target_F_BN2_2021_LPA.pt'
     netF.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_B_BN2_2021_LPA.pt'
+    # modelpath = './PT/BN/target_B_BN2_2021_LPA.pt'
     modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_C_BN2_2021_LPA.pt'
+    # modelpath = './PT/BN/target_C_BN2_2021_LPA.pt'
     modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
 
-    param_group = []
-    param_group_c = []
-    for k, v in netF.named_parameters():
-        # if k.find('bn')!=-1:
-        if True:
-            param_group += [{"params": v, "lr": args.lr * 0.1}]  # 0.1
+    # param_group = []
+    # param_group_c = []
+    # for k, v in netF.named_parameters():
+    #     # if k.find('bn')!=-1:
+    #     if True:
+    #         param_group += [{"params": v, "lr": args.lr * 0.1}]  # 0.1
 
-    for k, v in netB.named_parameters():
-        if True:
-            param_group += [{"params": v, "lr": args.lr * 1}]  # 1
-    for k, v in netC.named_parameters():
-        param_group_c += [{"params": v, "lr": args.lr * 1}]  # 1
+    # for k, v in netB.named_parameters():
+    #     if True:
+    #         param_group += [{"params": v, "lr": args.lr * 1}]  # 1
+    # for k, v in netC.named_parameters():
+    #     param_group_c += [{"params": v, "lr": args.lr * 1}]  # 1
 
-    optimizer = optim.SGD(param_group)
-    optimizer = op_copy(optimizer)
+    # optimizer = optim.SGD(param_group)
+    # optimizer = op_copy(optimizer)
 
-    optimizer_c = optim.SGD(param_group_c)
-    optimizer_c = op_copy(optimizer_c)
+    # optimizer_c = optim.SGD(param_group_c)
+    # optimizer_c = op_copy(optimizer_c)
 
-    # building feature bank and score bank
-    loader = dset_loaders["target"]
-    num_sample = len(loader.dataset)
-    fea_bank = torch.randn(num_sample, 256)
-    score_bank = torch.randn(num_sample, 12).cuda()
+    # # building feature bank and score bank
+    # loader = dset_loaders["target"]
+    # num_sample = len(loader.dataset)
+    # fea_bank = torch.randn(num_sample, 256)
+    # score_bank = torch.randn(num_sample, 12).cuda()
 
     netF.eval()
     netB.eval()
     netC.eval()
-    with torch.no_grad():
-        iter_test = iter(loader)
-        for i in range(len(loader)):
-            data = iter_test.next()
-            inputs = data[0]
-            indx = data[-1]
-            # labels = data[1]
-            inputs = inputs.cuda()
-            output = netB(netF(inputs))
-            output_norm = F.normalize(output)
-            outputs = netC(output)
-            outputs = nn.Softmax(-1)(outputs)
+    # with torch.no_grad():
+    #     iter_test = iter(loader)
+    #     for i in range(len(loader)):
+    #         data = iter_test.next()
+    #         inputs = data[0]
+    #         indx = data[-1]
+    #         # labels = data[1]
+    #         inputs = inputs.cuda()
+    #         output = netB(netF(inputs))
+    #         output_norm = F.normalize(output)
+    #         outputs = netC(output)
+    #         outputs = nn.Softmax(-1)(outputs)
 
-            fea_bank[indx] = output_norm.detach().clone().cpu()
-            score_bank[indx] = outputs.detach().clone()  # .cpu()
+    #         fea_bank[indx] = output_norm.detach().clone().cpu()
+    #         score_bank[indx] = outputs.detach().clone()  # .cpu()
 
-    max_iter = args.max_epoch * len(dset_loaders["target"])
-    interval_iter = max_iter // args.interval
+    # max_iter = args.max_epoch * len(dset_loaders["target"])
+    interval_iter = 8
     iter_num = 0
 
-    netF.train()
-    netB.train()
-    netC.train()
+    # netF.train()
+    # netB.train()
+    # netC.train()
     acc_log = 0
 
-    real_max_iter = max_iter
+    real_max_iter = 128
+    decay_factor = 0.94
+    min_momentum_constant = 0.005
+    mom_pre = 0.1
 
     while iter_num < real_max_iter:
         try:
@@ -296,84 +331,93 @@ def train_target(args):
         except:
             iter_test = iter(dset_loaders["target"])
             inputs_test, _, tar_idx = iter_test.next()
+        mom_new = (mom_pre * decay_factor)
+        # if inputs_test.size(0) == 1:
+        #     continue
 
-        if inputs_test.size(0) == 1:
-            continue
-
-        inputs_test = inputs_test.cuda()
-        if True:
-            alpha = (1 + 10 * iter_num / max_iter) ** (-args.beta) * args.alpha
-        else:
-            alpha = args.alpha
+        # inputs_test = inputs_test.cuda()
+        # if True:
+        #     alpha = (1 + 10 * iter_num / max_iter) ** (-args.beta) * args.alpha
+        # else:
+        #     alpha = args.alpha
 
         iter_num += 1
-        lr_scheduler(optimizer, iter_num=iter_num, max_iter=max_iter)
-        lr_scheduler(optimizer_c, iter_num=iter_num, max_iter=max_iter)
+        for m in netF.modules():
+            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.BatchNorm3d):
+                m.train()
+                m.momentum = mom_new + min_momentum_constant
+        for m in netB.modules():
+            if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.BatchNorm3d):
+                m.train()
+                m.momentum = mom_new + min_momentum_constant
+        mom_pre = mom_new
+        inputs = inputs_test.cuda()
+        _ = netB(netF(inputs))
 
-        features_test = netB(netF(inputs_test))
-        outputs_test = netC(features_test)
-        softmax_out = nn.Softmax(dim=1)(outputs_test)
-        # output_re = softmax_out.unsqueeze(1)
+        # lr_scheduler(optimizer, iter_num=iter_num, max_iter=max_iter)
+        # lr_scheduler(optimizer_c, iter_num=iter_num, max_iter=max_iter)
 
-        with torch.no_grad():
-            output_f_norm = F.normalize(features_test)
-            output_f_ = output_f_norm.cpu().detach().clone()
+        # features_test = netB(netF(inputs_test))
+        # outputs_test = netC(features_test)
+        # softmax_out = nn.Softmax(dim=1)(outputs_test)
+        # # output_re = softmax_out.unsqueeze(1)
 
-            pred_bs = softmax_out
+        # with torch.no_grad():
+        #     output_f_norm = F.normalize(features_test)
+        #     output_f_ = output_f_norm.cpu().detach().clone()
 
-            fea_bank[tar_idx] = output_f_.detach().clone().cpu()
-            score_bank[tar_idx] = softmax_out.detach().clone()
+        #     pred_bs = softmax_out
 
-            distance = output_f_ @ fea_bank.T
-            _, idx_near = torch.topk(distance, dim=-1, largest=True, k=args.K + 1)
-            idx_near = idx_near[:, 1:]  # batch x K
-            score_near = score_bank[idx_near]  # batch x K x C
+        #     fea_bank[tar_idx] = output_f_.detach().clone().cpu()
+        #     score_bank[tar_idx] = softmax_out.detach().clone()
 
-        # nn
-        softmax_out_un = softmax_out.unsqueeze(1).expand(
-            -1, args.K, -1
-        )  # batch x K x C
+        #     distance = output_f_ @ fea_bank.T
+        #     _, idx_near = torch.topk(distance, dim=-1, largest=True, k=args.K + 1)
+        #     idx_near = idx_near[:, 1:]  # batch x K
+        #     score_near = score_bank[idx_near]  # batch x K x C
 
-        loss = torch.mean(
-            (F.kl_div(softmax_out_un, score_near, reduction="none").sum(-1)).sum(1)
-        ) # Equal to dot product
+        # # nn
+        # softmax_out_un = softmax_out.unsqueeze(1).expand(
+        #     -1, args.K, -1
+        # )  # batch x K x C
 
-        mask = torch.ones((inputs_test.shape[0], inputs_test.shape[0]))
-        diag_num = torch.diag(mask)
-        mask_diag = torch.diag_embed(diag_num)
-        mask = mask - mask_diag
-        copy = softmax_out.T  # .detach().clone()#
+        # loss = torch.mean(
+        #     (F.kl_div(softmax_out_un, score_near, reduction="none").sum(-1)).sum(1)
+        # ) # Equal to dot product
 
-        dot_neg = softmax_out @ copy  # batch x batch
+        # mask = torch.ones((inputs_test.shape[0], inputs_test.shape[0]))
+        # diag_num = torch.diag(mask)
+        # mask_diag = torch.diag_embed(diag_num)
+        # mask = mask - mask_diag
+        # copy = softmax_out.T  # .detach().clone()#
 
-        dot_neg = (dot_neg * mask.cuda()).sum(-1)  # batch
-        neg_pred = torch.mean(dot_neg)
-        loss += neg_pred * alpha
+        # dot_neg = softmax_out @ copy  # batch x batch
 
-        optimizer.zero_grad()
-        optimizer_c.zero_grad()
-        loss.backward()
-        optimizer.step()
-        optimizer_c.step()
+        # dot_neg = (dot_neg * mask.cuda()).sum(-1)  # batch
+        # neg_pred = torch.mean(dot_neg)
+        # loss += neg_pred * alpha
 
-        if iter_num % interval_iter == 0 or iter_num == max_iter:
+        # optimizer.zero_grad()
+        # optimizer_c.zero_grad()
+        # loss.backward()
+        # optimizer.step()
+        # optimizer_c.step()
+
+        if iter_num % interval_iter == 0 or iter_num == real_max_iter:
             netF.eval()
             netB.eval()
             netC.eval()
             if args.dset == "visda-2017":
                 acc, accc = cal_acc(
                     dset_loaders["test"],
-                    fea_bank,
-                    score_bank,
                     netF,
                     netB,
                     netC,
-                    args,
                     flag=True,
                 )
                 log_str = (
                     "Task: {}, Iter:{}/{};  Acc on target: {:.2f}".format(
-                        args.name, iter_num, max_iter, acc
+                        args.name, iter_num, real_max_iter, acc
                     )
                     + "\n"
                     + "T: "
@@ -386,19 +430,19 @@ def train_target(args):
             netF.train()
             netB.train()
             netC.train()
-            # if acc>acc_log:
-            #     acc_log = acc
-            #     torch.save(
-            #         netF.state_dict(),
-            #         osp.join(args.output_dir, "target_F_test_" + '2021_'+str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netB.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_B_test_" + '2021_' + str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netC.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_C_test_" + '2021_' + str(args.tag) + ".pt"))
+            if acc>acc_log:
+                acc_log = acc
+                torch.save(
+                    netF.state_dict(),
+                    osp.join(args.output_dir, "target_F_BN_" + '2021_'+str(args.tag) + ".pt"))
+                torch.save(
+                    netB.state_dict(),
+                    osp.join(args.output_dir,
+                                "target_B_BN_" + '2021_' + str(args.tag) + ".pt"))
+                torch.save(
+                    netC.state_dict(),
+                    osp.join(args.output_dir,
+                                "target_C_BN_" + '2021_' + str(args.tag) + ".pt"))
 
     return netF, netB, netC
 
@@ -419,7 +463,7 @@ if __name__ == "__main__":
     parser.add_argument("--t", type=int, default=1, help="target")
     parser.add_argument("--max_epoch", type=int, default=15, help="max iterations")
     parser.add_argument("--interval", type=int, default=150)
-    parser.add_argument("--batch_size", type=int, default=64, help="batch_size")
+    parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument("--worker", type=int, default=4, help="number of workers")
     parser.add_argument("--dset", type=str, default="visda-2017")
     parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
@@ -465,9 +509,9 @@ if __name__ == "__main__":
         args.t = i
 
         folder = "./Data/"
-        args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
-        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
-        args.test_dset_path = folder + "image_new_list.txt"
+        args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+        args.test_dset_path = folder + "image_list.txt"
 
         args.output_dir_src = osp.join(
             args.output_src, args.da, args.dset, "T"
@@ -486,7 +530,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_BN_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()

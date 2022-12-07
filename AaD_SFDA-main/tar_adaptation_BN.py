@@ -225,14 +225,14 @@ def train_target(args):
         type=args.layer, class_num=args.class_num, bottleneck_dim=args.bottleneck
     ).cuda()
 
-    modelpath = args.output_dir_src + "/source_F.pt"
-    # modelpath = 'PT/BN/target_F_BN2_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_F.pt"
+    modelpath = './weight/target/uda/visda-2017/TV/target_F_BN_2021_LPA.pt'
     netF.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_B_BN2_2021_LPA.pt'
-    modelpath = args.output_dir_src + "/source_B.pt"
+    modelpath = './weight/target/uda/visda-2017/TV/target_B_BN_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    # modelpath = 'PT/BN/target_C_BN2_2021_LPA.pt'
-    modelpath = args.output_dir_src + "/source_C.pt"
+    modelpath = './weight/target/uda/visda-2017/TV/target_C_BN_2021_LPA.pt'
+    # modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
 
     param_group = []
@@ -386,19 +386,19 @@ def train_target(args):
             netF.train()
             netB.train()
             netC.train()
-            # if acc>acc_log:
-            #     acc_log = acc
-            #     torch.save(
-            #         netF.state_dict(),
-            #         osp.join(args.output_dir, "target_F_test_" + '2021_'+str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netB.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_B_test_" + '2021_' + str(args.tag) + ".pt"))
-            #     torch.save(
-            #         netC.state_dict(),
-            #         osp.join(args.output_dir,
-            #                     "target_C_test_" + '2021_' + str(args.tag) + ".pt"))
+            if acc>acc_log:
+                acc_log = acc
+                torch.save(
+                    netF.state_dict(),
+                    osp.join(args.output_dir, "target_F_mini_BN" + '2021_'+str(args.tag) + ".pt"))
+                torch.save(
+                    netB.state_dict(),
+                    osp.join(args.output_dir,
+                                "target_B_mini_BN" + '2021_' + str(args.tag) + ".pt"))
+                torch.save(
+                    netC.state_dict(),
+                    osp.join(args.output_dir,
+                                "target_C_mini_BN" + '2021_' + str(args.tag) + ".pt"))
 
     return netF, netB, netC
 
@@ -486,7 +486,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_mini_BN_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()

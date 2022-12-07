@@ -6,3 +6,4 @@ Data/*
 *.pt
 .DS_Store
 .DS_Store?
+*.out
