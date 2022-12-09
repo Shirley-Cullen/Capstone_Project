@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=AaD_ALL
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=160000
 #SBATCH --time=50:00:00

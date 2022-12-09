@@ -125,83 +125,37 @@ def data_load(args):
     return dset_loaders
 
 
-def cal_acc(loader, fea_bank, socre_bank, netF, netB, netC, args, flag=False):
+def cal_acc(loader, netF, netB, netC, flag=False):
     start_test = True
-    num_sample = len(loader.dataset)
-    label_bank = torch.randn(num_sample)  # .cuda()
-    pred_bank = torch.randn(num_sample)
-    nu=[]
-    # s=[]
-    # var_all=[]
-
     with torch.no_grad():
         iter_test = iter(loader)
         for i in range(len(loader)):
             data = iter_test.next()
             inputs = data[0]
             labels = data[1]
-            indx = data[-1]
             inputs = inputs.cuda()
-            fea = netB(netF(inputs))
-            """if args.var:
-                var_batch=fea.var()
-                var_all.append(var_batch)"""
-
-            # if args.singular:
-            # _, ss, _ = torch.svd(fea)
-            # s10=ss[:10]/ss[0]
-            # s.append(s10)
-
-            outputs = netC(fea)
-            softmax_out = nn.Softmax()(outputs)
-            nu.append(torch.mean(torch.svd(softmax_out)[1]))
-            output_f_norm = F.normalize(fea)
-            # fea_bank[indx] = output_f_norm.detach().clone().cpu()
-            label_bank[indx] = labels.float().detach().clone()  # .cpu()
-            pred_bank[indx] = outputs.max(-1)[1].float().detach().clone().cpu()
+            outputs = netC(netB(netF(inputs)))
             if start_test:
                 all_output = outputs.float().cpu()
                 all_label = labels.float()
-                # all_fea = output_f_norm.cpu()
                 start_test = False
             else:
                 all_output = torch.cat((all_output, outputs.float().cpu()), 0)
                 all_label = torch.cat((all_label, labels.float()), 0)
-                # all_fea = torch.cat((all_fea, output_f_norm.cpu()), 0)
     _, predict = torch.max(all_output, 1)
-    accuracy = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(
-        all_label.size()[0]
-    )
+    accuracy = torch.sum(
+        torch.squeeze(predict).float() == all_label).item() / float(
+            all_label.size()[0])
+    mean_ent = torch.mean(Entropy(
+        nn.Softmax(dim=1)(all_output))).cpu().data.item()
 
-    _, socre_bank_ = torch.max(socre_bank, 1)
-    distance = fea_bank.cpu() @ fea_bank.cpu().T
-    _, idx_near = torch.topk(distance, dim=-1, largest=True, k=4)
-    score_near = socre_bank_[idx_near[:, :]].float().cpu()  # N x 4
-
-    """acc1 = (score_near.mean(
-        dim=-1) == score_near[:, 0]).sum().float() / score_near.shape[0]"""
-    # acc1 = (
-    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
-    # ).sum().float() / score_near.shape[0]
-    # acc2 = (
-    #     (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == label_bank)
-    # ).sum().float() / score_near.shape[0]
-
-    """if True:
-        nu_mean=sum(nu)/len(nu)"""
-
-    # s10_avg=torch.stack(s).mean(0)
-    # print('nuclear mean: {:.2f}'.format(nu_mean))
-
-    if True:
+    if flag:
         matrix = confusion_matrix(all_label, torch.squeeze(predict).float())
         acc = matrix.diagonal() / matrix.sum(axis=1) * 100
         aacc = acc.mean()
         aa = [str(np.round(i, 2)) for i in acc]
-        acc = " ".join(aa)
-        if True:
-            return aacc, acc  # , acc1, acc2#, nu_mean, s10_avg
-
+        acc = ' '.join(aa)
+        return aacc, acc
     else:
         return accuracy * 100, mean_ent
 
@@ -456,6 +410,7 @@ if __name__ == "__main__":
     parser.add_argument("--alpha_decay", default=True)
     parser.add_argument("--nuclear", default=False, action="store_true")
     parser.add_argument("--var", default=False, action="store_true")
+    parser.add_argument('--KK', type=int, default=5)
     args = parser.parse_args()
 
     if args.dset == "office-home":
@@ -479,9 +434,9 @@ if __name__ == "__main__":
         args.t = i
 
         folder = "./Data/"
-        args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
-        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
-        args.test_dset_path = folder + "image_new_list.txt"
+        args.s_dset_path = folder + args.dset + '/train/' + 'image_list.txt'
+        args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_list.txt'
+        args.test_dset_path = folder + "image_list.txt"
 
         args.output_dir_src = osp.join(
             args.output_src, args.da, args.dset, "T"

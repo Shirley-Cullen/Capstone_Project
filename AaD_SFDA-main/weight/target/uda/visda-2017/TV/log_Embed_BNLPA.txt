@@ -33,5 +33,5 @@ test_dset_path:./Data/image_new_list.txt
 output_dir_src:weight/source/uda/visda-2017/T
 output_dir:weight/target/uda/visda-2017/TV
 name:TV
-out_file:<_io.TextIOWrapper name='weight/target/uda/visda-2017/TV/log_mini_LPA.txt' mode='w' encoding='UTF-8'>
+out_file:<_io.TextIOWrapper name='weight/target/uda/visda-2017/TV/log_Embed_BNLPA.txt' mode='w' encoding='UTF-8'>
 

@@ -226,12 +226,15 @@ def train_target(args):
     ).cuda()
 
     # modelpath = args.output_dir_src + "/source_F.pt"
-    modelpath = './PT/BN/target_F_BN2_2021_LPA.pt'
+    modelpath = args.output_dir+"/target_F_BN_ALL_" + '2021_'+str(args.tag) + ".pt"
+    print(modelpath)
     netF.load_state_dict(torch.load(modelpath))
-    modelpath = './PT/BN/target_B_BN2_2021_LPA.pt'
+    modelpath = args.output_dir+"/target_B_BN_ALL" + '2021_'+str(args.tag) + ".pt"
+    # modelpath = './PT/BN/target_B_BN2_2021_LPA.pt'
     # modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    modelpath = './PT/BN/target_C_BN2_2021_LPA.pt'
+    modelpath = args.output_dir+"/target_C_BN_ALL" + '2021_'+str(args.tag) + ".pt"
+    # modelpath = './PT/BN/target_C_BN2_2021_LPA.pt'
     # modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
 
@@ -255,7 +258,7 @@ def train_target(args):
     optimizer_c = op_copy(optimizer_c)
 
     # building feature bank and score bank
-    loader = dset_loaders["target"]
+    loader = dset_loaders["source_tr"]
     num_sample = len(loader.dataset)
     fea_bank = torch.randn(num_sample, 256)
     score_bank = torch.randn(num_sample, 12).cuda()
@@ -265,25 +268,33 @@ def train_target(args):
     netC.eval()
     with torch.no_grad():
         iter_test = iter(loader)
-        embed_list, labels_list, output_list = [], [], []
+        embed_list, lables_list, output_list = [], [], []
         for i in range(len(loader)):
             data = iter_test.next()
             inputs = data[0]
             indx = data[-1]
-            labels = data[1]
+            lables = data[1]
             inputs = inputs.cuda()
 
             output = netB(netF(inputs))
-            embeb = output.detach().cpu()
+            embed = output.detach().cpu()
             output_norm = F.normalize(output)
             outputs = netC(output)
             outputs = nn.Softmax(-1)(outputs)
-            outputs = outputs.
+            outputs = outputs.detach().cpu()
+            embed_list.append(embed.numpy())
+            lables_list.append(lables.numpy())
+            output_list.append(outputs.numpy())
+        torch.save(embed_list,'./BN_embed_1028.npy')
+        torch.save(lables_list,'./BN_lables_1028.npy')
+        torch.save(output_list,'./BN_output_1028.npy')
+        return embed_list,lables_list,output_list
+            
 
-            embed_list.append()
+            # embed_list.append()
 
-            fea_bank[indx] = output_norm.detach().clone().cpu()
-            score_bank[indx] = outputs.detach().clone()  # .cpu()
+            # fea_bank[indx] = output_norm.detach().clone().cpu()
+            # score_bank[indx] = outputs.detach().clone()  # .cpu()
 
     # max_iter = args.max_epoch * len(dset_loaders["target"])
     # interval_iter = max_iter // args.interval
@@ -471,7 +482,8 @@ if __name__ == "__main__":
         args.t = i
 
         folder = "./Data/"
-        args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
+        # args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
+        args.s_dset_path = folder + "image_embed_list.txt"
         args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
         args.test_dset_path = folder + "image_new_list.txt"
 
@@ -492,7 +504,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_Embed_BN{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()
