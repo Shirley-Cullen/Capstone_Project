@@ -285,9 +285,9 @@ def train_target(args):
             embed_list.append(embed.numpy())
             lables_list.append(lables.numpy())
             output_list.append(outputs.numpy())
-        torch.save(embed_list,'./AaD_embed_1028.npy')
-        torch.save(lables_list,'./AaD_lables_1028.npy')
-        torch.save(output_list,'./AaD_output_1028.npy')
+        torch.save(embed_list,'./AaD_embed_2.npy')
+        torch.save(lables_list,'./AaD_lables_2.npy')
+        torch.save(output_list,'./AaD_output_2.npy')
         return embed_list,lables_list,output_list
             
 
@@ -504,7 +504,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_mini_{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "AaD_embed_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()

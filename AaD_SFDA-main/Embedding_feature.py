@@ -226,14 +226,14 @@ def train_target(args):
     ).cuda()
 
     # modelpath = args.output_dir_src + "/source_F.pt"
-    modelpath = args.output_dir+"/target_F_BN_ALL_" + '2021_'+str(args.tag) + ".pt"
+    modelpath = args.output_dir+"/target_F_BN_ALL_2_" + '2021_'+str(args.tag) + ".pt"
     print(modelpath)
     netF.load_state_dict(torch.load(modelpath))
-    modelpath = args.output_dir+"/target_B_BN_ALL" + '2021_'+str(args.tag) + ".pt"
+    modelpath = args.output_dir+"/target_B_BN_ALL_2_" + '2021_'+str(args.tag) + ".pt"
     # modelpath = './PT/BN/target_B_BN2_2021_LPA.pt'
     # modelpath = args.output_dir_src + "/source_B.pt"
     netB.load_state_dict(torch.load(modelpath))
-    modelpath = args.output_dir+"/target_C_BN_ALL" + '2021_'+str(args.tag) + ".pt"
+    modelpath = args.output_dir+"/target_C_BN_ALL_2_" + '2021_'+str(args.tag) + ".pt"
     # modelpath = './PT/BN/target_C_BN2_2021_LPA.pt'
     # modelpath = args.output_dir_src + "/source_C.pt"
     netC.load_state_dict(torch.load(modelpath))
@@ -285,9 +285,9 @@ def train_target(args):
             embed_list.append(embed.numpy())
             lables_list.append(lables.numpy())
             output_list.append(outputs.numpy())
-        torch.save(embed_list,'./BN_embed_1028.npy')
-        torch.save(lables_list,'./BN_lables_1028.npy')
-        torch.save(output_list,'./BN_output_1028.npy')
+        torch.save(embed_list,'./BN_embed_2.npy')
+        torch.save(lables_list,'./BN_lables_2.npy')
+        torch.save(output_list,'./BN_output_2.npy')
         return embed_list,lables_list,output_list
             
 
@@ -483,7 +483,7 @@ if __name__ == "__main__":
 
         folder = "./Data/"
         # args.s_dset_path = folder + args.dset + '/train/' + 'image_new_list.txt'
-        args.s_dset_path = folder + "image_embed_list.txt"
+        args.s_dset_path = folder + "image_list.txt"
         args.t_dset_path = folder + args.dset + '/validation/' + names[args.t] + '_new_list.txt'
         args.test_dset_path = folder + "image_new_list.txt"
 
@@ -504,7 +504,7 @@ if __name__ == "__main__":
             os.mkdir(args.output_dir)
 
         args.out_file = open(
-            osp.join(args.output_dir, "log_Embed_BN{}.txt".format(args.tag)), "w"
+            osp.join(args.output_dir, "log_Embed_BN_2_{}.txt".format(args.tag)), "w"
         )
         args.out_file.write(print_args(args) + "\n")
         args.out_file.flush()
