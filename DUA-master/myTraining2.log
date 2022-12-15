@@ -1,0 +1,77 @@
+Starting DUA for Level 5
+Corruption - gaussian_noise :::: Level - 5
+Test on gaussian_noise level 5
+Files already downloaded and verified
+Error Before Adaptation: 28.8
+Error After Adaptation: 28.8
+Corruption - shot_noise :::: Level - 5
+Test on shot_noise level 5
+Files already downloaded and verified
+Error Before Adaptation: 23.0
+Error After Adaptation: 23.0
+Corruption - impulse_noise :::: Level - 5
+Test on impulse_noise level 5
+Files already downloaded and verified
+Error Before Adaptation: 26.2
+Error After Adaptation: 26.2
+Corruption - defocus_blur :::: Level - 5
+Test on defocus_blur level 5
+Files already downloaded and verified
+Error Before Adaptation: 9.5
+Error After Adaptation: 9.5
+Corruption - glass_blur :::: Level - 5
+Test on glass_blur level 5
+Files already downloaded and verified
+Error Before Adaptation: 20.6
+Error After Adaptation: 20.6
+Corruption - motion_blur :::: Level - 5
+Test on motion_blur level 5
+Files already downloaded and verified
+Error Before Adaptation: 10.6
+Error After Adaptation: 10.6
+Corruption - zoom_blur :::: Level - 5
+Test on zoom_blur level 5
+Files already downloaded and verified
+Error Before Adaptation: 9.3
+Error After Adaptation: 9.3
+Corruption - snow :::: Level - 5
+Test on snow level 5
+Files already downloaded and verified
+Error Before Adaptation: 14.1
+Error After Adaptation: 14.1
+Corruption - frost :::: Level - 5
+Test on frost level 5
+Files already downloaded and verified
+Error Before Adaptation: 15.3
+Error After Adaptation: 15.3
+Corruption - fog :::: Level - 5
+Test on fog level 5
+Files already downloaded and verified
+Error Before Adaptation: 17.5
+Error After Adaptation: 17.5
+Corruption - brightness :::: Level - 5
+Test on brightness level 5
+Files already downloaded and verified
+Error Before Adaptation: 7.6
+Error After Adaptation: 7.6
+Corruption - contrast :::: Level - 5
+Test on contrast level 5
+Files already downloaded and verified
+Error Before Adaptation: 20.9
+Error After Adaptation: 20.9
+Corruption - elastic_transform :::: Level - 5
+Test on elastic_transform level 5
+Files already downloaded and verified
+Error Before Adaptation: 14.7
+Error After Adaptation: 14.7
+Corruption - pixelate :::: Level - 5
+Test on pixelate level 5
+Files already downloaded and verified
+Error Before Adaptation: 41.3
+Error After Adaptation: 41.3
+Corruption - jpeg_compression :::: Level - 5
+Test on jpeg_compression level 5
+Files already downloaded and verified
+Error Before Adaptation: 14.7
+Error After Adaptation: 14.7
+Mean Error after Adaptation 18.3

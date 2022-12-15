@@ -3,5 +3,8 @@
 ./main.py
 output_fc_pt/*
 output_fc_npy/*
+*.npy
+*.pt
+*.pth
 
 
