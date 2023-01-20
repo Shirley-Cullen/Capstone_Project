@@ -1,0 +1,14 @@
+/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and will be removed in 0.15, please use 'weights' instead.
+  warnings.warn(
+/gpfsnyu/home/mx648/.conda/envs/mycapstone/lib/python3.8/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=ResNet101_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet101_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+tar_adaptation.py:156: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  softmax_out = nn.Softmax()(outputs)
+Traceback (most recent call last):
+  File "tar_adaptation.py", line 490, in <module>
+    train_target(args)
+  File "tar_adaptation.py", line 361, in train_target
+    acc, accc = cal_acc(
+  File "tar_adaptation.py", line 184, in cal_acc
+    (score_near.mean(dim=-1) == score_near[:, 0]) & (score_near[:, 0] == pred_bank)
+RuntimeError: The size of tensor a (55388) must match the size of tensor b (72372) at non-singleton dimension 0

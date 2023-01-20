@@ -1,0 +1,14 @@
+CIFAR-10-P.tar
+CIFAR-10-P/
+*.zip
+.DS_Store
+.DS_Store?
+CIFAR-10-C/
+cifar-10-batches-py/
+output_fc_pt/*
+output_fc_npy/*
+*.jpg
+*.png
+__pycache__/*
+*.pt
+*.out

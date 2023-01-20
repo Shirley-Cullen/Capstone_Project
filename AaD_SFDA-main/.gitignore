@@ -1,0 +1,9 @@
+Data/*
+*.tar
+*.pth
+*.jpg
+*.png
+*.pt
+.DS_Store
+.DS_Store?
+*.out

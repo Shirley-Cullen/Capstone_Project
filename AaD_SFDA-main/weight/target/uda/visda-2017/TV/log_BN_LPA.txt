@@ -1,0 +1,69 @@
+==========================================
+gpu_id:0
+s:0
+t:1
+max_epoch:15
+interval:150
+batch_size:32
+worker:4
+dset:visda-2017
+lr:0.001
+net:resnet101
+seed:2021
+bottleneck:256
+K:5
+epsilon:1e-05
+layer:wn
+classifier:bn
+output:weight/target/
+output_src:weight/source/
+tag:LPA
+da:uda
+issave:True
+cc:False
+alpha:1.0
+beta:5.0
+alpha_decay:True
+nuclear:False
+var:False
+class_num:12
+s_dset_path:./Data/visda-2017/train/image_list.txt
+t_dset_path:./Data/visda-2017/validation/validation_list.txt
+test_dset_path:./Data/image_list.txt
+output_dir_src:weight/source/uda/visda-2017/T
+output_dir:weight/target/uda/visda-2017/TV
+name:TV
+out_file:<_io.TextIOWrapper name='weight/target/uda/visda-2017/TV/log_BN_LPA.txt' mode='w' encoding='UTF-8'>
+
+Task: TV, Iter:8/128;  Acc on target: 63.64
+T: 77.31 16.25 83.33 90.71 69.34 39.25 85.42 38.54 85.72 48.99 84.47 44.41
+Task: TV, Iter:16/128;  Acc on target: 66.36
+T: 76.98 20.41 86.67 89.84 72.04 54.0 83.12 45.56 84.86 50.29 83.56 49.03
+Task: TV, Iter:24/128;  Acc on target: 66.92
+T: 75.69 22.28 88.02 89.4 72.64 60.08 81.28 47.88 84.88 48.3 81.9 50.69
+Task: TV, Iter:32/128;  Acc on target: 67.18
+T: 75.58 23.57 88.38 88.82 72.82 62.78 80.21 48.44 84.67 47.65 81.54 51.68
+Task: TV, Iter:40/128;  Acc on target: 67.11
+T: 75.29 24.11 88.57 88.56 72.34 64.23 79.3 48.31 84.35 47.21 81.4 51.65
+Task: TV, Iter:48/128;  Acc on target: 67.14
+T: 74.85 24.74 88.58 88.31 72.44 65.38 78.17 48.53 84.23 46.85 81.33 52.24
+Task: TV, Iter:56/128;  Acc on target: 67.13
+T: 74.83 24.95 88.51 88.2 72.01 65.91 77.83 48.7 84.16 46.6 81.21 52.61
+Task: TV, Iter:64/128;  Acc on target: 67.08
+T: 74.52 25.21 88.61 88.12 72.12 66.36 77.42 48.89 84.02 46.13 81.08 52.48
+Task: TV, Iter:72/128;  Acc on target: 67.11
+T: 74.63 25.35 88.59 87.97 72.04 66.78 77.37 49.06 84.0 45.76 81.0 52.7
+Task: TV, Iter:80/128;  Acc on target: 67.02
+T: 74.19 25.33 88.58 87.84 71.88 67.06 77.1 48.92 83.83 45.51 80.95 53.02
+Task: TV, Iter:88/128;  Acc on target: 66.99
+T: 74.08 25.4 88.65 87.68 71.81 67.31 76.95 49.0 83.74 45.29 80.84 53.17
+Task: TV, Iter:96/128;  Acc on target: 66.98
+T: 73.9 25.42 88.59 87.75 71.65 67.67 76.71 49.13 83.74 45.11 80.59 53.44
+Task: TV, Iter:104/128;  Acc on target: 66.93
+T: 73.61 25.75 88.54 87.57 71.66 67.95 76.35 49.26 83.6 44.9 80.56 53.45
+Task: TV, Iter:112/128;  Acc on target: 66.92
+T: 73.38 25.82 88.61 87.6 71.69 68.18 76.38 49.08 83.65 44.9 80.44 53.3
+Task: TV, Iter:120/128;  Acc on target: 66.86
+T: 73.27 25.82 88.62 87.54 71.62 68.35 76.06 49.08 83.3 44.97 80.3 53.39
+Task: TV, Iter:128/128;  Acc on target: 66.79
+T: 73.02 25.89 88.57 87.4 71.44 68.53 75.71 49.07 83.11 45.04 80.31 53.39
